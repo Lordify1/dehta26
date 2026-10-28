@@ -1,0 +1,292 @@
+Skip to content
+Chat history
+You said:
+Look at this
+
+I need your info on this
+
+This message was created automatically by mail delivery software.
+
+A message that you sent could not be delivered to one or more of its
+recipients. This is a permanent error. The following address(es) failed:
+
+  owoeyejoshua2002@gmail.com
+    host gmail-smtp-in.l.google.com [192.178.223.27]
+    SMTP error from remote mail server after pipelined end of data:
+    550-5.7.28 [102.68.84.118       1] Gmail has detected an unusual rate of
+    550-5.7.28 unsolicited mail originating from your IP address. To protect our
+    550-5.7.28 users from spam, mail sent from your IP address has been blocked.
+    550-5.7.28 For more information, go to
+    550-5.7.28  https://support.google.com/mail/?p=UnsolicitedIPError to review our
+    550 5.7.28 Bulk Email Senders Guidelines. ffacd0b85a97d-435e16758fasi28166747f8f.321 - gsmtp
+Reporting-MTA: dns; localhost
+
+Action: failed
+Final-Recipient: rfc822;owoeyejoshua2002@gmail.com
+Status: 5.0.0
+Remote-MTA: dns; gmail-smtp-in.l.google.com
+Diagnostic-Code: smtp; 550-5.7.28 [102.68.84.118       1] Gmail has detected an unusual rate of
+ 550-5.7.28 unsolicited mail originating from your IP address. To protect our
+ 550-5.7.28 users from spam, mail sent from your IP address has been blocked.
+ 550-5.7.28 For more information, go to
+ 550-5.7.28  https://support.google.com/mail/?p=UnsolicitedIPError to review our
+ 550 5.7.28 Bulk Email Senders Guidelines. ffacd0b85a97d-435e16758fasi28166747f8f.321 - gsmtp
+
+
+My emails are not delivering
+ChatGPT said:
+
+Yeah, Gmail basically slammed the door in your face and taped a “stop spamming” sign on it. Rude, but predictable.
+
+Here’s what that wall of robotic text actually means, in human language:
+
+What happened
+
+    Gmail blocked your email because of your IP address, not necessarily your email content.
+
+    That IP (102.68.84.118) has been sending a lot of emails recently, or Gmail thinks it has.
+
+    Gmail decided “nah” and permanently rejected your message with error 550 5.7.28.
+
+    “Permanent error” means it won’t magically retry later. It’s dead. Buried. Gone.
+
+Important detail
+This does not mean:
+
+    Your Gmail account is banned ❌
+
+    The recipient’s email is wrong ❌
+
+It does mean:
+
+    The network or server you’re sending from looks spammy to Gmail ✔️
+
+Common reasons this happens
+
+    You’re sending from:
+
+        A shared hosting server
+
+        A VPS with bad reputation
+
+        Office Wi-Fi, school Wi-Fi, café Wi-Fi
+
+        A cheap email script that blasts messages
+
+    Someone else on that same IP has been spamming and dragged you down with them. Group punishment. Fun.
+
+Why Gmail is extra aggressive
+Gmail protects users like a paranoid guard dog. If an IP sneezes too many emails too fast, Gmail assumes it’s a bot army.
+
+What actually fixes this
+Pick what applies to you:
+
+    If you’re using a website or script to send emails
+
+        Stop using raw SMTP from your server
+
+        Use a real email service:
+
+            Gmail SMTP
+
+            SendGrid
+
+            Mailgun
+
+            Amazon SES
+            These have good reputations and won’t get you blocked instantly.
+
+    If you’re sending manually from an email app
+
+        Change networks (mobile hotspot works)
+
+        Restart router to get a new IP (sometimes)
+
+        Avoid sending multiple emails quickly
+
+    If you control the server
+
+        Set up SPF, DKIM, and DMARC
+
+        Reduce sending rate
+
+        Check if your IP is blacklisted
+
+        Warm up the IP instead of blasting emails like it owes you money
+
+    Short-term workaround
+
+        Use your Gmail account directly in the browser
+
+        Or send through Gmail SMTP in your app
+
+Why only Gmail fails
+Other providers are more chill. Gmail is the strict parent who reads your texts and judges your friends.
+
+Bottom line:
+Your emails aren’t delivering because your sending IP looks suspicious, not because you did something evil personally. You just got caught standing next to the wrong digital dumpster fire.
+
+Fix the sending method or change the IP source and Gmail will stop acting like you’re running an underground newsletter operation.
+You said:
+My server is a vps and it's on hestia
+
+What should i set up or adjust there
+ChatGPT said:
+
+Cool, VPS + Hestia. Powerful combo. Also a fantastic way to accidentally look like a spam lord if it’s not tuned. Gmail saw your server and went “absolutely not”.
+
+Here’s the no-nonsense checklist for Hestia on a VPS. Do these and Gmail usually calms down.
+1. SPF (mandatory, not optional)
+
+If SPF is wrong or missing, Gmail already distrusts you.
+
+Where in Hestia
+
+    DNS → your domain → Edit → Add record
+
+SPF record
+
+Type: TXT
+Name: @
+Value: v=spf1 ip4:YOUR_SERVER_IP -all
+
+Replace YOUR_SERVER_IP with your VPS IP.
+
+If you send mail using anything else later (SendGrid, Gmail SMTP), you’ll add it here.
+2. DKIM (this one is huge)
+
+Without DKIM, Gmail treats your emails like anonymous notes slipped under a door.
+
+In Hestia
+
+    Mail → Domains → select your domain
+
+    Enable DKIM Support
+
+    Save
+
+Then:
+
+    DNS → Add the DKIM TXT record Hestia shows you
+
+It’ll look like:
+
+Type: TXT
+Name: mail._domainkey
+Value: v=DKIM1; k=rsa; p=MIIBIjANBgkq...
+
+Do not edit the key. Do not get creative.
+3. DMARC (Gmail loves this)
+
+This tells Gmail “yes, I am serious about not being spam”.
+
+DNS record
+
+Type: TXT
+Name: _dmarc
+Value: v=DMARC1; p=none; rua=mailto:postmaster@yourdomain.com
+
+Later you can change p=none to quarantine or reject when things are stable.
+4. Reverse DNS (PTR record)
+
+This one blocks a shocking number of VPS users.
+
+Your IP must resolve back to your domain.
+
+Example:
+
+102.68.84.118 → mail.yourdomain.com
+
+You do this in your VPS provider’s panel, not Hestia.
+
+Then make sure:
+
+mail.yourdomain.com → 102.68.84.118
+
+Forward + reverse must match. Gmail checks this. Religiously.
+5. Hostname must match
+
+On the server itself:
+
+hostnamectl
+
+Should show:
+
+mail.yourdomain.com
+
+If not:
+
+hostnamectl set-hostname mail.yourdomain.com
+
+Reboot after. Yes, actually reboot.
+6. Stop Exim from blasting emails
+
+Exim on Hestia will happily send 500 emails in 10 seconds and ruin your reputation.
+
+Limit sending rate
+Edit:
+
+/etc/exim4/exim4.conf.template
+
+Add or adjust:
+
+smtp_accept_max = 20
+smtp_accept_queue = 10
+
+Restart Exim:
+
+systemctl restart exim4
+
+7. Check your IP reputation (brace yourself)
+
+Many VPS IPs are born guilty.
+
+Check:
+
+    Spamhaus
+
+    Barracuda
+
+    SORBS
+
+If listed, Gmail will keep blocking you no matter how innocent you act.
+
+If it’s dirty:
+
+    Request delisting or
+
+    Ask your VPS provider for a new IP
+
+8. Warm up your IP (do NOT spam test emails)
+
+First few days:
+
+    Send 5–10 emails max per day
+
+    Only to people who reply
+
+    No bulk, no newsletters, no “testing testing testing”
+
+Gmail watches behavior like it’s stalking you.
+9. If this still fails (real talk)
+
+Running your own mail server in 2026 is basically choosing pain.
+
+The sane move:
+
+    Keep Hestia for inboxes
+
+    Use SendGrid / Mailgun / Amazon SES for outgoing mail
+
+    Add their SMTP to Hestia
+
+That’s how most “serious” setups survive Gmail.
+TL;DR
+
+Your VPS isn’t broken. It’s untrusted.
+Fix SPF, DKIM, DMARC, PTR, hostname, slow Exim down, warm the IP.
+
+Do those and Gmail stops treating your server like it’s selling fake crypto in DMs.
+
+
+ChatGPT can make mistakes. Check important info.

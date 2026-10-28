@@ -1,0 +1,577 @@
+Mine
+
+
+Is there  a way to do it that my app doesnt show the loading div at every little change i do in the backend
+
+Vite react doesnt trigger a full page reload all the time so i would love this loader not to show too unless the user refreshes the page or something, you feel me
+
+Because there was a day i did a change and as i looked at the screen the change was applied then it showed the loading. I feel since the change can be applied before the loading that means the loading can be escapable, because this is kind of slowing my work so much
+
+I feel propbably it is because i am using useState to handle the Loader or somthing probably if i use context instead. Anyways, help look into it
+
+So look at these
+
+
+My router
+
+
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+import { ToastContainer } from 'react-toastify';
+import { useUser } from '@/context/UserContext';
+import { ProtectedRoute, GuestRoute, AnyRoute, AdminAuthRoute, AdminGuestRoute, FounderRoute } from './Guard';
+import { Loading } from '@/components/Tools/Misc';
+import 'react-toastify/dist/ReactToastify.css'
+import NewPassword from '../pages/Advisor/Auth/NewPassword';
+
+const FaecesRouter = () => {
+    const Home = lazy(() => import('@/pages/Advisor/Projects'));
+    const OGPage = lazy(() => import('@/pages/PrivateSalePage'));
+    const Index = lazy(() => import('@/pages/welcome'));
+    const Dashboard = lazy(() => import('@/pages/Advisor/Auth/Dashboard'));
+    const Login = lazy(() => import('@/pages/Advisor/Auth/Login'));
+    const Register = lazy(() => import('@/pages/Advisor/Auth/Register'));
+    const Profile = lazy(() => import('@/pages/Advisor/Auth/Profile'));
+    const ForgotPassword = lazy(() => import('@/pages/Advisor/Auth/ForgotPassword'));
+    const Market = lazy(() => import('@/pages/Advisor/Market'));
+    const MarketPurchase = lazy(() => import('@/pages/Advisor/MarketPurchase'));
+    const NotFound = lazy(() => import('@/pages/Error/404'));
+    const Wallet = lazy(() => import('@/pages/Advisor/Wallet'));
+    const EarnFi = lazy(() => import('@/pages/Advisor/EarnFi'));
+
+
+    // Founder
+    const EditProject = lazy(() => import('@/pages/Advisor/Founder/EditProject'));
+
+    // Admin
+    const AdminLogin = lazy(() => import('@/pages/Admin/Auth/Login'));
+    const AdminDashboard = lazy(() => import('@/pages/Admin/Dashboard'));
+    const AdminGlasses = lazy(() => import('@/pages/Admin/Glass/GlassIndex'))
+    const AdminLens = lazy(() => import('@/pages/Admin/LensOffers/LensIndex'))
+    const AdminProjects = lazy(() => import('@/pages/Admin/Projects/ProjectIndex'))
+    const AdminProjectsCreate = lazy(() => import('@/pages/Admin/Projects/CreateProject'))
+    const AdminQuest = lazy(() => import('@/pages/Admin/Quest/QuestIndex'));
+    const AdminUsers = lazy(() => import('@/pages/Admin/Users/UsersIndex'));
+    const ProjectDetail = lazy(() => import('@/pages/Advisor/ProjectDetail'))
+    const TrendBet = lazy(() => import('@/pages/Advisor/TrendBet'));
+
+    const { user, loading } = useUser();
+
+    const urls = [
+        { path: '/', element: <Index />, type: 'any' },
+        { path: '/projects', element: <Home />, type: 'any' },
+        { path: '/index', element: <Index />, type: 'any' },
+        { path: '/og/private_sale', element: <OGPage />, type: 'any' },
+        { path: '/project/:id/:slug', element: <ProjectDetail/>, type: 'any'},
+        { path: '/trendbet', element: <TrendBet/>, type: 'auth'},
+
+        { path: '/register', element: <Register />, type: 'guest' },
+        { path: '/login', element: <Login />, type: 'guest' },
+        { path: '/reset-password', element: <ForgotPassword/>, type: 'any'},
+        { path: '/new-password', element: <NewPassword/>, type: 'any'},
+
+
+        { path: '/dashboard', element: <Dashboard />, type: 'auth' },
+        { path: '/profile', element: <Profile />, type: 'auth' },
+
+        { path: '/edit-project', element: <EditProject />, type: 'auth', userType: 'founder'},
+
+        // Market 
+        { path: '/market', element: <Market />, type: 'auth' },
+        { path: '/market/purchase/:item/:slug', element: <MarketPurchase />, type: 'auth' },
+
+        { path: '/earnfi', element: <EarnFi />, type: 'any' },
+
+        // { path: '/wallet', element: <Wallet />, type: 'auth' },
+
+        { path: '/admin/login', element: <AdminLogin />, type: 'any', userType: 'admin' },
+        { path: '/admin/dashboard', element: <AdminDashboard />, type: 'auth', userType: 'admin' },
+        { path: '/admin/users', element: <AdminUsers />, type: 'auth', userType: 'admin' },
+        { path: '/admin/glasses', element: <AdminGlasses/>, type: "auth", userType: 'admin'},
+        { path: '/admin/lens', element: <AdminLens/>, type: "auth", userType: 'admin'},
+        { path: '/admin/lens', element: <AdminLens/>, type: "auth", userType: 'admin'},
+        { path: '/admin/projects', element: <AdminProjects/>, type: "auth", userType: 'admin'},
+        { path: '/admin/projects/create', element: <AdminProjectsCreate/>, type: "auth", userType: 'admin'},
+        { path: '/admin/quests', element: <AdminQuest/>, type: "auth", userType: 'admin'},
+        // catch-all 404 route (must be last)
+        { path: '*', element: <NotFound />, type: 'any' },
+    ];
+
+    return (
+        <HelmetProvider>
+            <Router>
+                <Suspense fallback={<Loading />}>
+                {/* <Suspense> */}
+                    <Routes>
+                        {urls.map(({ path, element, type, userType }) => {
+                            let Guard = null
+                            switch(userType){
+                                case 'admin':
+                                    Guard = type === 'auth'
+                                    ? AdminAuthRoute
+                                    : AdminGuestRoute
+                                    break
+                                case 'founder':
+                                    Guard = FounderRoute
+                                    break
+                                case 'investor':
+                                    break
+                                default:
+                                Guard = type === 'auth'
+                                ? ProtectedRoute
+                                : type === 'guest'
+                                ? GuestRoute
+                                : AnyRoute;
+                                break
+                            }
+                            return (
+                                <Route
+                                    key={path}
+                                    path={path}
+                                    element={
+                                        <Guard user={user} loading={loading}>
+                                            {element}
+                                        </Guard>
+                                    }
+                                />
+                            );
+                        })}
+                    </Routes>
+                </Suspense>
+                <ToastContainer
+                style={{'zIndex': 999999999999999}}
+                position="top-right"
+                autoClose={3000}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                className={`rounded-3xl mt-2`}
+                />
+            </Router>
+        </HelmetProvider>
+    );
+};
+
+export default FaecesRouter;
+
+
+
+
+My App.tsx
+
+
+import { OffCanvasProvider } from '@/context/OffCanvasContext';
+import { UserProvider } from '@/context/UserContext';
+import { UIProvider } from '@/context/UIContext';
+import { FetchProvider } from '@/context/FetchContext';
+import { MiscProvider } from '@/context/MiscContext';
+import { AdminProvider } from '@/context/AdminContext';
+import FaecesRouter from '@/routes/router';
+import {WebProviders} from '@/lib/WebProviders.jsx';
+
+// Import your pages explicitly
+
+export const appName = 'Dehta';
+export const advisorName = "Dehta";
+// live 
+export const appUrl =  import.meta.env.VITE_APP_URL;
+export const advisorUrl = import.meta.env.VITE_APP_URL;
+export const apiUrl = import.meta.env.VITE_API_URL;
+
+
+// dev
+// export const appUrl = "http://localhost:3000";
+// export const advisorUrl = 'http://localhost:3000';
+// export const apiUrl = "http://localhost:8000";
+
+export const date = (): number => { return new Date().getFullYear() }
+// export const wc_projectId = '1af94f6197a84bb9b0bbf205a8e25fb0';
+export const saleWallet = '0x1cf1b22dafe0d2c3e10979054b7154a6cd81ba3b';
+export const coinrankingApiKey = 'coinrankinga66957141a09518a2c111bd27765b8a77ea9f88ca5ed2bab'
+export const npApiKey = '41467PN-TEJ4E18-GAFVHR4-MDXKREP'
+export const npIpnKey = 'wk6ZY2zrG0xNCbKd8jgE+GTBUQspvgVL'
+
+const App = () => {
+
+  return (
+      <AdminProvider>
+      <MiscProvider>
+      <WebProviders>
+      <UserProvider>
+      <UIProvider>
+      <FetchProvider>
+        <OffCanvasProvider>
+          <FaecesRouter/>
+        </OffCanvasProvider>
+      </FetchProvider>
+      </UIProvider>
+      </UserProvider>
+      </WebProviders>
+      </MiscProvider>
+      </AdminProvider>
+  );
+};
+
+export default App
+
+
+And then my main.tsx
+
+
+import './App.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client';
+import { initializeTheme } from './hooks/use-appearance';
+import App from './App';
+import './enviroment';
+import { Buffer } from 'buffer'
+
+window.Buffer = Buffer
+
+// Initialize the app
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+)
+
+
+// This will set light / dark mode on load...
+initializeTheme();
+
+
+
+
+Then the Guard
+
+
+
+import { Loading } from "@/components/Tools/Misc";
+import { Navigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+type Props = {
+    user: any,
+    loading: boolean,
+    children: any
+}
+
+export const ProtectedRoute = ({ user, loading, children }: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-center w-full h-full"><Loading/></div>
+    }
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if(user?.is_admin === 'yes'){
+        return <Navigate to='/admin/dashboard' replace />;
+    }
+    return children;
+};
+
+export const GuestRoute = ({ user, loading, children }: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-center w-full h-full"><Loading/></div>
+    }
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+};
+
+export const AnyRoute = ({ user, loading, children }: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-center w-full h-full"><Loading/></div>
+    }
+    return children;
+};
+
+
+export const AdminGuestRoute = ({user, loading, children}: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-items-center w-full h-full"><Loading/></div>
+    }
+
+    if(user){
+        return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    return children;
+}
+
+
+export const AdminAuthRoute = ({user, loading, children}: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-items-center w-full h-full"><Loading/></div>
+    }
+    if (!user) {
+        return <Navigate to="/admin/login" replace />;
+    }
+
+    if(user?.role !== 'admin') {
+        return <Navigate to="/dashboard" replace />
+    }
+    return children;    
+}
+
+export const FounderRoute = ({user, loading, children}: Props) => {
+    if (loading) {
+        return <div className="flex flex-col items-center justify-items-center w-full h-full"><Loading/></div>
+    }
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if(user?.role !== 'founder') {
+        return <Navigate to="/dashboard" replace />
+    }
+    return children;    
+}
+
+
+
+
+What do i need to change
+
+
+
+
+
+
+
+CHATGPT
+
+
+
+
+Yeah nah you’re not crazy — I 100% feel you 😭
+What you’re seeing is a **React Suspense + auth loading double whammy**, and Vite HMR is basically trolling you.
+
+Short version first, then we go deep:
+
+👉 **Your loader is showing because `loading` flips to `true` way too often (not just on hard refresh), AND Suspense fallback also kicks in during HMR/module reloads.**
+So even when the UI already updated, React is like: *“Hold up bro, loading again”*.
+
+The fix is **architectural**, not “just switch to context”.
+
+---
+
+## 🔥 The Real Problem (2 loaders fighting each other)
+
+You currently have **TWO independent loading systems**:
+
+### 1️⃣ Suspense fallback (global)
+
+```tsx
+<Suspense fallback={<Loading />}>
+```
+
+This runs when:
+
+* A lazy-loaded module reloads
+* Vite HMR replaces a file
+* A chunk invalidates
+
+👉 **This WILL trigger even when React doesn’t fully reload the page**
+
+---
+
+### 2️⃣ Auth loading (inside every Guard)
+
+```tsx
+if (loading) {
+  return <Loading />
+}
+```
+
+This runs when:
+
+* `UserContext` re-renders
+* Any state in `UserProvider` changes
+* HMR causes providers to re-evaluate
+
+So what happens is:
+
+> Change backend → Vite HMR → lazy chunk refreshes → Suspense loader flashes → UserContext recalculates → Guard loader flashes
+
+💀 double pain.
+
+---
+
+## 🧠 Key Insight (this is the unlock)
+
+> **Auth loading should ONLY happen ONCE: on initial app boot.**
+
+Not:
+
+* On route change
+* Not on HMR
+* Not on state updates
+* Not inside every Guard
+
+Right now, your Guards are acting like traffic cops with anxiety.
+
+---
+
+## ✅ The Correct Architecture (clean + fast)
+
+### Step 1: Make auth loading “boot-only”
+
+In `UserContext`, track **hydration**, not generic loading.
+
+#### ❌ Bad
+
+```ts
+const [loading, setLoading] = useState(true);
+```
+
+#### ✅ Good
+
+```ts
+const [isBooting, setIsBooting] = useState(true);
+```
+
+And ONLY set it once:
+
+```ts
+useEffect(() => {
+  const init = async () => {
+    await fetchUser(); // token check, API call, whatever
+    setIsBooting(false);
+  };
+  init();
+}, []);
+```
+
+⚠️ Never set `isBooting` back to `true` again.
+
+---
+
+### Step 2: Move loader OUT of Guards
+
+Your Guards should NOT render loaders at all.
+
+#### ❌ Current Guard
+
+```tsx
+if (loading) return <Loading />
+```
+
+#### ✅ Fixed Guard
+
+```tsx
+if (!user) return <Navigate to="/login" replace />;
+return children;
+```
+
+Guards should only:
+
+* Allow
+* Redirect
+
+Not load.
+
+---
+
+### Step 3: Add ONE global boot loader in `App.tsx`
+
+This is the biggest win.
+
+```tsx
+const App = () => {
+  const { isBooting } = useUser();
+
+  if (isBooting) {
+    return <Loading />;
+  }
+
+  return (
+    <AdminProvider>
+      ...
+      <FaecesRouter />
+      ...
+    </AdminProvider>
+  );
+};
+```
+
+Now:
+
+* Loader shows ONLY on first load
+* Never again
+* HMR doesn’t trigger it
+* Route changes don’t trigger it
+
+Chef’s kiss 🤌
+
+---
+
+## 🧨 Step 4: Stop Suspense from flashing on dev changes
+
+This one’s spicy.
+
+### Option A (best DX): Disable Suspense loader in dev
+
+```tsx
+<Suspense fallback={import.meta.env.DEV ? null : <Loading />}>
+```
+
+Now:
+
+* Dev = instant updates, no flashing
+* Prod = loader for real users
+
+---
+
+### Option B (advanced): Per-route Suspense
+
+Instead of wrapping **everything**, wrap only big pages.
+
+```tsx
+<Route
+  path="/dashboard"
+  element={
+    <Suspense fallback={<Loading />}>
+      <Dashboard />
+    </Suspense>
+  }
+/>
+```
+
+This avoids global reload vibes.
+
+---
+
+## 🧠 Why Context vs useState didn’t fix it
+
+You guessed *close*, but the issue wasn’t **where** state lives — it’s **when it changes**.
+
+Context + `useState` + HMR =
+
+> React thinks something important changed → re-evaluates → loaders flash
+
+The real fix is:
+
+> **Auth state must stabilize after boot**
+
+---
+
+## ✅ Final Mental Model (remember this)
+
+* 🟢 **Boot Loader** → once, globally
+* 🔵 **Suspense Loader** → only for real navigation
+* 🔴 **Guards** → never show loaders
+
+If you want, I can:
+
+* Rewrite your `UserContext` cleanly
+* Show a `useHydratedAuth()` pattern
+* Or refactor Guards into a single smart guard
+
+Say the word, Lordify 😎

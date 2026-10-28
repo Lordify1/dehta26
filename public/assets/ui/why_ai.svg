@@ -1,0 +1,15 @@
+<svg width="253" height="253" viewBox="0 0 253 253" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.502184" y="1.59644" width="250" height="250" rx="29.5" transform="rotate(-0.250784 0.502184 1.59644)" fill="#5BEB70" fill-opacity="0.1"/>
+<rect x="0.502184" y="1.59644" width="250" height="250" rx="29.5" transform="rotate(-0.250784 0.502184 1.59644)" stroke="#5BEB70"/>
+<rect x="46.0503" y="47.0459" width="159.727" height="159.727" rx="29.5" transform="rotate(-0.250784 46.0503 47.0459)" fill="#5BEB70" fill-opacity="0.2"/>
+<rect x="46.0503" y="47.0459" width="159.727" height="159.727" rx="29.5" transform="rotate(-0.250784 46.0503 47.0459)" stroke="#5BEB70"/>
+<rect x="83.0503" y="83.0459" width="86.1604" height="86.1604" rx="14.5" transform="rotate(-0.250784 83.0503 83.0459)" fill="url(#paint0_linear_95_752)"/>
+<rect x="83.0503" y="83.0459" width="86.1604" height="86.1604" rx="14.5" transform="rotate(-0.250784 83.0503 83.0459)" stroke="#5BEB70"/>
+<path d="M109.938 135.548L117.168 113.648L125.118 113.648L132.618 135.548L127.518 135.548L121.458 117.038L123.018 117.668L119.148 117.668L120.768 117.038L114.858 135.548L109.938 135.548ZM115.428 130.118L116.928 126.038L125.508 126.038L127.038 130.118L115.428 130.118ZM135.535 135.548L135.535 113.648L140.455 113.648L140.455 135.548L135.535 135.548Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_95_752" x1="126.128" y1="82.5481" x2="126.128" y2="169.708" gradientUnits="userSpaceOnUse">
+<stop stop-color="#5BEB70"/>
+<stop offset="1" stop-color="#009916"/>
+</linearGradient>
+</defs>
+</svg>

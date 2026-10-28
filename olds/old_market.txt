@@ -1,0 +1,194 @@
+import React, { useEffect, useState } from "react";
+import DashboardLayout from "@/layouts/Advisor/DashboardLayout";
+import { founderSidebar } from "@/data/founderSidebarData";
+import { investorSidebar } from "@/data/investorSidebarData";
+import { useUser } from "@/context/UserContext";
+import { Helmet } from "react-helmet-async";
+import { advisorUrl, appName, appUrl } from "@/dapp";
+import axios from "axios";
+import { Loading, LoadingDiv, classMap, emptyData } from "@/components/Tools/Misc";
+import { FaCoins, FaShoppingCart, FaGlasses, FaFire, FaSearch, FaSearchDollar, FaDollarSign } from "react-icons/fa";
+import LensOffer from "@/components/ui/Advisor/LensOffer";
+import GlassCard from "@/components/ui/Advisor/GlassCard";
+import Modal from "@/components/ui/Modal";
+import { useUI } from "@/context/UIContext";
+import SendRequest from "@/components/Tools/SendRequest";
+import { apiUrl } from "../../App";
+import PayButton from "../../components/ui/PayButton";
+
+const Market = () => {
+    const { user } = useUser();
+  const [isLoading, setIsLoading] = useState(true);
+  const [offers, setOffers] = useState([]);
+  const [glasses, setGlasses] = useState([]);
+  const [userGlasses, setUserGlasses] = useState(user?.glass_purchases || [])
+
+  const {setShowModal} = useUI();
+
+  const [selectedGlass, setSelectedGlass] = useState({
+          id: null,
+          rarity: "",
+          name: "",
+          description: "",
+          lens_cost: "",
+          cost: "",
+          icon: ""
+    })
+
+  const sidebarD =
+    user?.role === "founder" ? founderSidebar : investorSidebar;
+
+  const getData = async () => {
+    try {
+      const res = await axios.post(`${apiUrl}/api/market/all`);
+      setOffers(res.data.offers || []);
+      // console.log(res)
+      setGlasses(res.data.glasses || []);
+    } catch (error) {
+      console.error("Error fetching market data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  return (
+    <>
+      <Helmet>
+        <title>Market Place - Buy Lens, Glasses and More - {appName}</title>
+      </Helmet>
+      <Modal
+      title="Glass Purchase"
+      >
+        <GlassCard
+        id={selectedGlass.id}
+        icon={selectedGlass.icon}
+        description={selectedGlass.description}
+        lens_cost={selectedGlass.lens_cost}
+        cost={selectedGlass.cost}
+        rarity={selectedGlass.rarity}
+        name={selectedGlass.name}
+        showBtn={false}
+        />
+        <PayButton
+        price={selectedGlass.cost}
+        onPurchaseComplete={() => {}}
+        />
+      </Modal>
+      {isLoading ? (
+        <DashboardLayout
+          user={user}
+          sidebarData={sidebarD}
+          sidebarDataType={user?.role}
+        >
+          <LoadingDiv layout={[[4], [4], [4]]} height="h-30" />
+        </DashboardLayout>
+      ) : (
+        <>
+        <DashboardLayout
+          user={user}
+          sidebarData={sidebarD}
+          sidebarDataType={user?.role}
+        >
+          <section className={`${classMap.section} flex flex-col md:flex-col lg:flex-row mb-6`}>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <FaShoppingCart className="text-[var(--owner)]" /> Marketplace
+            </h2>
+            <small className="text-[var(--muted-foreground)] text-center">
+              Buy <FaSearch className="inline text-[var(--owner)]"/> or unlock <FaGlasses className="inline text-[var(--owner)]"/> using your <FaSearch className="inline text-[var(--owner)]"/> balance or
+              Web3 wallet.
+            </small>
+          </section>
+
+          {/* LENS OFFERS */}
+          <section className={`${classMap.pageSection()} mb-10`}>
+            <div className={`${classMap.sectionHeaderDiv()}`}>
+              <h3 className={`${classMap.sectionHeader()}`}>
+                <FaSearchDollar className="inline mr-2 text-[var(--owner)]" />
+                Lens Offers
+              </h3>
+            </div>
+
+            
+              {isLoading ? (<Loading/>) : offers.length > 0 ? (
+                <div id="#lens" className="grid grid-cols-1 md:grid-cols-3 w-[100%] items-start justify-center lg:grid-cols-5 gap-2 max-h-[100vh] overflow-y-scroll">
+                {offers.map((offer) => (
+                  <LensOffer
+                  {...offer}
+                  />
+                ))}
+                </div>
+              ) : (
+                emptyData("No offers available at the moment")
+              )}
+          </section>
+
+          {/* GLASSES COLLECTION */}
+          <section className={`${classMap.pageSection()} mb-10`}>
+            <div className={`${classMap.sectionHeaderDiv()}`}>
+              <h3 className={`${classMap.sectionHeader()}`}>
+                <FaGlasses className="inline mr-2 text-[var(--owner)]" />
+                Glasses Collection
+              </h3>
+            </div>
+
+            
+              {isLoading ? (<Loading/>) : glasses.length > 0 ? (
+                <div id="#glass" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-1 max-h-[100vh] overflow-y-scroll">
+                {glasses.map((glass) => {
+                    let userHave = false;
+                    userGlasses.length > 0 && userGlasses.map((item, index) => {
+                        userHave = item.glass_id === glass.id ? true : false 
+                    })
+                    return(
+                        <div
+                            key={glass.id}
+                            className={`${classMap.userCard(1)} ${glass.rarity === 'special' ? 'border-b-4 border-b-red-500' : 'border-b-3 border-b-[var(--owner)]'}`}
+                            >
+                            <div className="flex flex-col items-center justify-center text-center">
+                                <img src={`${glass.icon}`} className="w-[60%]" alt={glass.icon} />
+                                <h4 className="font-semibold text-lg">
+                                {glass.name}
+                                </h4>
+                                <p className="text-sm text-[var(--muted-foreground)] mb-3">
+                                {glass.description}
+                                </p>
+                                <div className="flex items-center gap-2 mb-2">
+                                <FaDollarSign className="text-[var(--owner)]" />
+                                <span>{glass.cost.toLocaleString()} $</span>
+                                </div>
+                                {userHave ? (
+                                    <p className={`${classMap.tempBtn}`}>Glass Purchased</p>
+                                ) : (
+                                    <button
+                                    className={`${classMap.buttonJsx({})}`}
+                                    onClick={() => {
+                                        setShowModal(true);
+                                        setSelectedGlass({...glass})
+                                    }}
+                                    >
+                                    <FaSearchDollar className="inline mr-1" /> Buy Glass
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )
+                })}
+                </div>
+              ) : (
+                emptyData("No glasses available right now.")
+              )}
+          </section>
+        </DashboardLayout>
+        </>
+      )}
+    </>
+  );
+};
+
+export default Market;

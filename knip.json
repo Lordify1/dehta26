@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/**/*.{js,jsx,ts,tsx}", "src/**/*.{css}"],
+  "project": [
+    "src/**/*.{js,jsx,ts,tsx}",
+    "src/**/*.{css}",
+    "vite.config.ts",
+    "eslint.config.js"
+  ],
+  "ignore": [
+    "vendor/**",
+    "node_modules/**",
+    "storage/**",
+    "bootstrap/cache/**",
+    "public/build/**"
+  ]
+}
